@@ -169,12 +169,23 @@ const BOUTIQUE_PRESETS = {
 };
 
 export default function App() {
-  // Détection du preset boutique via URL (?demo=mode | ?demo=parfum | ?demo=cuir)
+  // Détection du mode : 'store' (Plein écran Boutique Pure pour le client) ou 'agency' (Présentation Daro Boost)
+  const [viewMode, setViewMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('store') || params.get('boutique') || params.get('view') === 'store') {
+        return 'store';
+      }
+    }
+    return 'agency';
+  });
+
+  // Détection du preset boutique via URL (?store=mode | ?demo=mode | ?boutique=parfum)
   const [currentPresetKey, setCurrentPresetKey] = useState(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      const demo = params.get('demo');
-      if (demo && BOUTIQUE_PRESETS[demo]) return demo;
+      const storeParam = params.get('store') || params.get('boutique') || params.get('demo');
+      if (storeParam && BOUTIQUE_PRESETS[storeParam]) return storeParam;
     }
     return 'mode';
   });
@@ -236,6 +247,28 @@ export default function App() {
     const itemsList = selectedItems.map(item => `• 1x ${item.name} (${selectedSize}) — ${item.price.toLocaleString('fr-FR')} FCFA`).join('\n');
     return `Salam ${currentBoutique.name} ! 👋\nJe souhaite passer commande via votre catalogue Daro Boost :\n\n${itemsList}\n\n💰 *Total :* ${totalAmount.toLocaleString('fr-FR')} FCFA\n📍 *Livraison :* ${customerAddress}\n👤 *Nom :* ${customerName}\n\nPaiement souhaité : Wave 🌊`;
   };
+
+  // Si l'utilisateur consulte la boutique client en mode autonome
+  if (viewMode === 'store') {
+    return (
+      <StandaloneStoreView 
+        boutique={currentBoutique}
+        currentKey={currentPresetKey}
+        onSwitchPreset={(key) => {
+          setCurrentPresetKey(key);
+          if (typeof window !== 'undefined') {
+            window.history.replaceState(null, '', `?store=${key}`);
+          }
+        }}
+        onSwitchToAgency={() => {
+          setViewMode('agency');
+          if (typeof window !== 'undefined') {
+            window.history.replaceState(null, '', `?demo=${currentPresetKey}`);
+          }
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#2B1E16] font-sans bg-grain selection:bg-[#C85A32] selection:text-white">
@@ -677,6 +710,20 @@ export default function App() {
 
                 </div>
               </div>
+
+              {/* Bouton d'ouverture de la boutique en plein écran */}
+              <button
+                onClick={() => {
+                  setViewMode('store');
+                  if (typeof window !== 'undefined') {
+                    window.history.pushState(null, '', `?store=${currentPresetKey}`);
+                  }
+                }}
+                className="mt-3.5 px-4 py-2 bg-white hover:bg-[#FAF7F0] border border-[#E4D5B7] rounded-full text-xs font-mono font-bold text-[#8E381A] hover:text-[#C85A32] flex items-center gap-2 shadow-sm transition group"
+              >
+                <span>📱 Ouvrir {currentBoutique.name} en plein écran</span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition" />
+              </button>
             </div>
 
           </div>
@@ -980,6 +1027,265 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+    </div>
+  );
+}
+
+// ============================================================================
+// COMPOSANT BOUTIQUE EN LIGNE AUTONOME (POUR LES CLIENTS FINAUX DES BOUTIQUES)
+// AUCUN ARGUMENTAIRE MARKETING AGÈNCE, PURE EXPÉRIENCE E-COMMERCE MOBILE-FIRST
+// ============================================================================
+function StandaloneStoreView({ boutique, currentKey, onSwitchPreset, onSwitchToAgency }) {
+  const [selectedItems, setSelectedItems] = useState([boutique.products[0]]);
+  const [selectedSize, setSelectedSize] = useState("M");
+  const [customerName, setCustomerName] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [isOrdering, setIsOrdering] = useState(false);
+
+  useEffect(() => {
+    setSelectedItems([boutique.products[0]]);
+  }, [boutique]);
+
+  const toggleProduct = (prod) => {
+    if (selectedItems.some(i => i.id === prod.id)) {
+      if (selectedItems.length > 1) {
+        setSelectedItems(selectedItems.filter(i => i.id !== prod.id));
+      }
+    } else {
+      setSelectedItems([...selectedItems, prod]);
+    }
+  };
+
+  const totalAmount = selectedItems.reduce((acc, curr) => acc + curr.price, 0);
+
+  const handleWhatsAppCheckout = () => {
+    const itemsList = selectedItems.map(item => `• 1x ${item.name} (${selectedSize}) — ${item.price.toLocaleString('fr-FR')} FCFA`).join('\n');
+    const nameStr = customerName.trim() ? customerName : "Client en ligne";
+    const addressStr = customerAddress.trim() ? customerAddress : "Dakar";
+    const msg = `Salam ${boutique.name} ! 👋\nJe souhaite passer commande sur votre catalogue en ligne :\n\n${itemsList}\n\n💰 *Total :* ${totalAmount.toLocaleString('fr-FR')} FCFA\n📍 *Livraison :* ${addressStr}\n👤 *Nom :* ${nameStr}\n\nPaiement souhaité : Wave 🌊`;
+    const waUrl = `https://wa.me/221778690584?text=${encodeURIComponent(msg)}`;
+    window.open(waUrl, '_blank');
+  };
+
+  return (
+    <div className="min-h-screen bg-[#FDFBF7] text-[#2B1E16] font-sans pb-36">
+      
+      {/* 1. Bandeau Démo discret pour Serigne & l'équipe */}
+      <div className="bg-[#1E1610] text-[#EFE7D3] px-3 sm:px-4 py-2 text-xs flex items-center justify-between">
+        <span className="font-mono truncate">
+          ✨ Démo personnalisée pour <strong className="text-white">{boutique.name}</strong>
+        </span>
+        <button 
+          onClick={onSwitchToAgency}
+          className="text-[11px] font-mono text-[#EBB458] hover:underline shrink-0 ml-3"
+        >
+          Présentation Daro Boost ➔
+        </button>
+      </div>
+
+      {/* 2. Header Officiel de la Boutique Client */}
+      <header className="bg-white border-b border-[#EBE3D3] px-4 pt-5 pb-5 sticky top-0 z-40 shadow-xs">
+        <div className="max-w-md mx-auto">
+          {/* Sélecteur de démonstration pour tester les autres types de boutiques */}
+          <div className="flex items-center justify-center gap-1.5 p-1 bg-[#FAF7F0] border border-[#E8DEC8] rounded-full mb-3.5">
+            {Object.entries(BOUTIQUE_PRESETS).map(([key, b]) => (
+              <button
+                key={key}
+                onClick={() => onSwitchPreset(key)}
+                className={`px-3 py-1 rounded-full text-xs font-mono font-bold transition flex items-center gap-1 ${
+                  currentKey === key 
+                    ? 'bg-[#C85A32] text-white shadow-sm' 
+                    : 'text-[#6F5B4C] hover:bg-white'
+                }`}
+              >
+                <span>{b.avatar}</span>
+                <span>{b.name.split(' ')[0]}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-3.5">
+            <div className="w-14 h-14 rounded-2xl bg-[#F5F0E4] border border-[#E4D5B7] flex items-center justify-center text-2xl shadow-sm shrink-0">
+              {boutique.avatar}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <h1 className="font-extrabold text-lg sm:text-xl tracking-tight text-[#2B1E16] truncate">
+                  {boutique.name}
+                </h1>
+                <span className="text-blue-600 text-xs font-bold shrink-0" title="Boutique vérifiée">✓</span>
+              </div>
+              <p className="text-xs text-[#6F5B4C] mt-0.5 font-medium truncate">
+                {boutique.tagline}
+              </p>
+              <div className="flex items-center gap-2 mt-1.5">
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Ouvert 24h/24
+                </span>
+                <span className="text-[10px] text-[#8E381A] font-mono">
+                  📦 Livraison Dakar
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* 3. Sélecteur de Taille / Option */}
+      <div className="bg-[#FAF7F0] border-b border-[#EBE3D3] px-4 py-2.5">
+        <div className="max-w-md mx-auto flex items-center justify-between text-xs">
+          <span className="font-semibold text-[#5C4535]">Votre taille / pointure :</span>
+          <div className="flex gap-1.5">
+            {['S', 'M', 'L', 'XL'].map(size => (
+              <button
+                key={size}
+                onClick={() => setSelectedSize(size)}
+                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg font-mono font-bold transition flex items-center justify-center border text-xs ${
+                  selectedSize === size
+                    ? 'bg-[#C85A32] text-white border-[#C85A32] shadow-sm'
+                    : 'bg-white text-[#2B1E16] border-[#D9CEBA] hover:bg-[#F5F0E4]'
+                }`}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Catalogue des Produits */}
+      <main className="max-w-md mx-auto px-4 pt-5 space-y-4">
+        <div className="flex items-center justify-between text-xs text-[#6F5B4C]">
+          <span className="font-bold text-sm text-[#2B1E16]">Catalogue Disponible ({boutique.products.length})</span>
+          <span className="font-mono text-[#8E381A]">Paiement Wave & OM</span>
+        </div>
+
+        <div className="space-y-3.5">
+          {boutique.products.map(prod => {
+            const isSelected = selectedItems.some(i => i.id === prod.id);
+
+            return (
+              <div
+                key={prod.id}
+                onClick={() => toggleProduct(prod)}
+                className={`rounded-2xl border p-3 flex gap-3.5 cursor-pointer transition-all ${
+                  isSelected
+                    ? 'bg-white border-[#C85A32] shadow-md ring-2 ring-[#C85A32]/30'
+                    : 'bg-white border-[#E8DEC8] hover:border-[#C85A32]/60'
+                }`}
+              >
+                <div className="relative w-24 h-24 shrink-0 rounded-xl overflow-hidden bg-[#FAF7F0]">
+                  <img 
+                    src={prod.image} 
+                    alt={prod.name} 
+                    className="w-full h-full object-cover"
+                  />
+                  <span className="absolute top-1.5 left-1.5 bg-[#C85A32] text-white text-[9px] font-mono font-bold px-1.5 py-0.5 rounded">
+                    {prod.badge}
+                  </span>
+                </div>
+
+                <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                  <div>
+                    <div className="text-[10px] font-mono text-[#8E381A] uppercase tracking-wider font-bold">
+                      {prod.category}
+                    </div>
+                    <h3 className="font-bold text-sm text-[#2B1E16] leading-snug line-clamp-2">
+                      {prod.name}
+                    </h3>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    <div className="font-mono font-extrabold text-sm sm:text-base text-[#C85A32]">
+                      {prod.price.toLocaleString('fr-FR')} FCFA
+                    </div>
+                    <div className={`px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1 ${
+                      isSelected
+                        ? 'bg-[#C85A32] text-white'
+                        : 'bg-[#FAF7F0] border border-[#D9CEBA] text-[#5C4535]'
+                    }`}>
+                      {isSelected ? '✓ Choisi' : '+ Choisir'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Témoignage client de confiance */}
+        <div className="p-4 bg-[#FAF7F0] border border-[#E8DEC8] rounded-2xl text-xs space-y-1 mt-6">
+          <div className="flex items-center gap-1 text-[#E09F3E]">
+            {'★'.repeat(5)}
+            <span className="text-[#2B1E16] font-bold ml-1">4.9/5 sur Dakar</span>
+          </div>
+          <p className="text-[#5C4535]">
+            Commandez en 1 clic. Vous recevez la confirmation par WhatsApp avec le suivi de livraison.
+          </p>
+        </div>
+      </main>
+
+      {/* 5. Panier & Commande WhatsApp Flottante (Fixée en bas) */}
+      <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-[#E8DEC8] p-3.5 sm:p-4 z-50 shadow-lg">
+        <div className="max-w-md mx-auto space-y-2.5">
+          <div className="flex items-center justify-between text-xs px-1">
+            <span className="text-[#5C4535]">
+              {selectedItems.length} article{selectedItems.length > 1 ? 's' : ''} • Taille {selectedSize}
+            </span>
+            <div className="font-mono font-extrabold text-sm sm:text-base text-[#2B1E16]">
+              Total : {totalAmount.toLocaleString('fr-FR')} FCFA
+            </div>
+          </div>
+
+          {!isOrdering ? (
+            <button
+              onClick={() => setIsOrdering(true)}
+              className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2.5 text-xs sm:text-sm shadow-lg shadow-[#25D366]/25 transition active:scale-95"
+            >
+              <MessageCircle className="w-5 h-5" />
+              <span>Commander via WhatsApp</span>
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </button>
+          ) : (
+            <div className="space-y-2 bg-[#FAF7F0] p-3 rounded-2xl border border-[#E8DEC8] animate-fadeIn">
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <input
+                  type="text"
+                  placeholder="Votre nom (ex: Amina)"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  className="px-3 py-2 bg-white border border-[#D9CEBA] rounded-xl focus:outline-none focus:border-[#C85A32]"
+                />
+                <input
+                  type="text"
+                  placeholder="Quartier (ex: Almadies)"
+                  value={customerAddress}
+                  onChange={(e) => setCustomerAddress(e.target.value)}
+                  className="px-3 py-2 bg-white border border-[#D9CEBA] rounded-xl focus:outline-none focus:border-[#C85A32]"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setIsOrdering(false)}
+                  className="px-3 py-2 text-xs bg-white border border-[#D9CEBA] rounded-xl text-[#6F5B4C]"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleWhatsAppCheckout}
+                  className="flex-1 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 text-xs shadow-md transition"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Envoyer la commande sur WhatsApp</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
     </div>
   );
