@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShoppingBag, 
   MessageCircle, 
@@ -18,6 +18,13 @@ import {
   HelpCircle,
   Award
 } from 'lucide-react';
+
+const CHANNELS = [
+  { label: "DM Instagram.", color: "text-[#C85A32]", platform: "Instagram", bg: "bg-[#C85A32]/10", border: "border-[#C85A32]/30" },
+  { label: "Vidéos TikTok.", color: "text-[#111111]", platform: "TikTok", bg: "bg-black/10", border: "border-black/30" },
+  { label: "Statuts WhatsApp.", color: "text-[#25D366]", platform: "WhatsApp", bg: "bg-[#25D366]/15", border: "border-[#25D366]/40" },
+  { label: "Directs Facebook.", color: "text-[#1877F2]", platform: "Facebook", bg: "bg-[#1877F2]/10", border: "border-[#1877F2]/30" }
+];
 
 const PRODUCTS = [
   {
@@ -54,6 +61,21 @@ export default function App() {
   const [customerAddress, setCustomerAddress] = useState("Almadies, Dakar");
   const [simScreen, setSimScreen] = useState('catalogue'); // 'catalogue' | 'whatsapp'
   const [openFaq, setOpenFaq] = useState(null);
+
+  // Rotation dynamique des canaux (Instagram, TikTok, WhatsApp, Facebook)
+  const [channelIndex, setChannelIndex] = useState(0);
+  const [isFading, setIsFading] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsFading(true);
+      setTimeout(() => {
+        setChannelIndex((prev) => (prev + 1) % CHANNELS.length);
+        setIsFading(false);
+      }, 250);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
 
   const toggleProduct = (prod) => {
     if (selectedItems.some(i => i.id === prod.id)) {
@@ -99,7 +121,7 @@ export default function App() {
               Voir la Démo
             </a>
             <a 
-              href="https://wa.me/221778690584?text=Salam%20Serigne%2C%20je%20souhaite%20activer%20Daro%20Boost%20pour%20ma%20boutique%20Instagram" 
+              href="https://wa.me/221778690584?text=Salam%20Serigne%2C%20je%20souhaite%20activer%20Daro%20Boost%20pour%20ma%20boutique%20TikTok%20et%20Instagram" 
               target="_blank" 
               rel="noopener noreferrer"
               className="bg-[#2B1E16] hover:bg-[#C85A32] text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 py-2.5 rounded-full transition-all duration-300 shadow-sm flex items-center gap-2"
@@ -115,16 +137,47 @@ export default function App() {
       <section className="pt-16 pb-20 px-4 sm:px-6 max-w-5xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 bg-[#EFE7D3]/80 border border-[#E4D5B7] px-3.5 py-1.5 rounded-full text-xs font-mono text-[#8E381A] mb-8">
           <Sparkles className="w-3.5 h-3.5 text-[#C85A32]" />
-          <span>Le Vendeur qui ne dort jamais à Dakar</span>
+          <span>Le Vendeur qui ne dort jamais à Dakar • Multi-Réseaux</span>
         </div>
 
-        <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-[#2B1E16] leading-[1.08] mb-6">
-          Ne perdez plus jamais une vente dans vos <span className="font-serif italic font-normal text-[#C85A32]">DM Instagram.</span>
+        <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-[#2B1E16] leading-[1.12] mb-6 min-h-[140px] sm:min-h-[160px] md:min-h-[180px] flex flex-col justify-center items-center">
+          <span>Ne perdez plus jamais une vente dans vos</span>
+          <span 
+            className={`font-serif italic font-normal transition-all duration-300 transform inline-block mt-1 ${
+              isFading ? "opacity-0 -translate-y-2 scale-95" : "opacity-100 translate-y-0 scale-100"
+            } ${CHANNELS[channelIndex].color}`}
+          >
+            {CHANNELS[channelIndex].label}
+          </span>
         </h1>
 
+        {/* Pilules interactives des canaux supportés */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
+          {CHANNELS.map((ch, idx) => (
+            <button
+              key={ch.platform}
+              onClick={() => {
+                setIsFading(true);
+                setTimeout(() => {
+                  setChannelIndex(idx);
+                  setIsFading(false);
+                }, 150);
+              }}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-mono font-bold border transition-all duration-300 flex items-center gap-2 ${
+                channelIndex === idx 
+                  ? `${ch.bg} ${ch.border} ${ch.color} scale-105 shadow-sm` 
+                  : 'bg-white/70 border-[#E4D5B7] text-[#6F5B4C] hover:bg-white'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${channelIndex === idx ? 'bg-current animate-pulse' : 'bg-[#C85A32]'}`}></span>
+              <span>{ch.platform}</span>
+            </button>
+          ))}
+        </div>
+
         <p className="text-lg sm:text-xl text-[#5C4535] max-w-2xl mx-auto leading-relaxed mb-10">
-          Un client sur Instagram est impulsif : s'il n'a pas de réponse en 5 minutes, il va chez le concurrent. 
-          <strong className="text-[#2B1E16] font-semibold"> Daro Boost</strong> transforme votre bio en caisse automatique avec catalogue One-Tap et commandes WhatsApp structurées.
+          Un client sur <strong className="text-[#2B1E16]">TikTok</strong>, <strong className="text-[#2B1E16]">Instagram</strong> ou <strong className="text-[#2B1E16]">WhatsApp</strong> est impulsif : s'il n'a pas de réponse en 5 minutes, il va chez le concurrent. 
+          <strong className="text-[#2B1E16] font-semibold"> Daro Boost</strong> transforme vos réseaux en machine de commande automatique avec catalogue One-Tap et paniers WhatsApp structurés.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -182,7 +235,7 @@ export default function App() {
               Testez comme si vous étiez <span className="font-serif italic font-normal text-[#C85A32]">votre propre client.</span>
             </h2>
             <p className="text-[#5C4535]">
-              Touchez les articles ci-dessous pour voir comment une commande Instagram se transforme instantanément en un message WhatsApp structuré et prêt à encaisser.
+              Touchez les articles ci-dessous pour voir comment une commande sur vos vidéos TikTok ou posts Instagram se transforme instantanément en un message WhatsApp structuré et prêt à encaisser.
             </p>
           </div>
 
@@ -198,7 +251,7 @@ export default function App() {
                 <ul className="space-y-3 text-sm text-[#5C4535]">
                   <li className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-[#C85A32] shrink-0 mt-0.5" />
-                    <span>Il clique sur votre lien en bio Instagram (zéro application à installer).</span>
+                    <span>Il clique sur votre lien en bio TikTok, Instagram ou WhatsApp (zéro application à installer).</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-[#C85A32] shrink-0 mt-0.5" />
@@ -398,7 +451,7 @@ export default function App() {
       <section className="py-20 px-4 sm:px-6 max-w-5xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#2B1E16] tracking-tight mb-4">
-            Le Choc : Pourquoi 80% des ventes se perdent en DM
+            Le Choc : Pourquoi 80% des ventes se perdent sur TikTok & Instagram
           </h2>
           <p className="text-[#5C4535] max-w-xl mx-auto text-base">
             Ne soyez plus un commerçant qui passe sa journée à répondre « Prix en PV », devenez une marque qui traite des commandes automatiques.
@@ -415,7 +468,7 @@ export default function App() {
             <ul className="space-y-3.5 text-sm text-[#5C4535]">
               <li className="flex items-start gap-2">
                 <span className="text-rose-500 font-bold">✕</span>
-                <span>Le client demande « Prix svp » en commentaire ou DM à 21h30.</span>
+                <span>Le client commente « Prix svp » sous votre vidéo TikTok ou en DM à 21h30.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-rose-500 font-bold">✕</span>
