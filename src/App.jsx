@@ -69,36 +69,120 @@ const TELEMETRY_CARDS = [
   }
 ];
 
-const PRODUCTS = [
-  {
-    id: 1,
-    name: "Robe Soie Sahel Wax",
-    price: 28000,
-    category: "Mode Féminine",
-    image: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=600&q=80",
-    badge: "Bestseller"
+const BOUTIQUE_PRESETS = {
+  mode: {
+    id: "mode",
+    name: "Maison Sahel Couture",
+    tagline: "Mode & Robes de Soie • Almadies",
+    avatar: "👗",
+    products: [
+      {
+        id: 1,
+        name: "Robe Soie Sahel Wax",
+        price: 28000,
+        category: "Mode Féminine",
+        image: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=600&q=80",
+        badge: "Bestseller"
+      },
+      {
+        id: 2,
+        name: "Ensemble Lin Brodé Dakar",
+        price: 35000,
+        category: "Couture Moderne",
+        image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
+        badge: "Nouvelle Collection"
+      },
+      {
+        id: 3,
+        name: "Boubou Soie Contemporain",
+        price: 45000,
+        category: "Luxe & Soirée",
+        image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=600&q=80",
+        badge: "Prestige"
+      }
+    ]
   },
-  {
-    id: 2,
-    name: "Coffret Oud & Ambre Royal",
-    price: 19500,
-    category: "Parfumerie de Luxe",
-    image: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80",
-    badge: "Coup de Cœur"
+  parfum: {
+    id: "parfum",
+    name: "Passion Parfum Dakar",
+    tagline: "Parfumerie Rare & Bakhour Royal • Mermoz",
+    avatar: "🌸",
+    products: [
+      {
+        id: 11,
+        name: "Coffret Oud & Ambre Royal",
+        price: 19500,
+        category: "Parfumerie de Luxe",
+        image: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80",
+        badge: "Coup de Cœur"
+      },
+      {
+        id: 12,
+        name: "Brume Corporelle Musc Blanc",
+        price: 12000,
+        category: "Brumes Parfumées",
+        image: "https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=600&q=80",
+        badge: "Bestseller"
+      },
+      {
+        id: 13,
+        name: "Bakhour Artisanal Touba",
+        price: 8500,
+        category: "Senteurs d'Intérieur",
+        image: "https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&w=600&q=80",
+        badge: "Artisanal"
+      }
+    ]
   },
-  {
-    id: 3,
-    name: "Sac Cuir Artisanal Touba",
-    price: 24000,
-    category: "Maroquinerie",
-    image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=80",
-    badge: "Artisanal"
+  cuir: {
+    id: "cuir",
+    name: "Atelier Cuir Touba",
+    tagline: "Maroquinerie & Chaussures d'Exception • Ngor",
+    avatar: "👜",
+    products: [
+      {
+        id: 21,
+        name: "Sac Cuir Artisanal Touba",
+        price: 24000,
+        category: "Maroquinerie",
+        image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=600&q=80",
+        badge: "Artisanal"
+      },
+      {
+        id: 22,
+        name: "Mocassins Cuir Pleine Fleur",
+        price: 32000,
+        category: "Chaussures Luxe",
+        image: "https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&w=600&q=80",
+        badge: "Fait Main"
+      },
+      {
+        id: 23,
+        name: "Portefeuille & Ceinture Cuir",
+        price: 15000,
+        category: "Accessoires",
+        image: "https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=600&q=80",
+        badge: "Indispensable"
+      }
+    ]
   }
-];
+};
 
 export default function App() {
+  // Détection du preset boutique via URL (?demo=mode | ?demo=parfum | ?demo=cuir)
+  const [currentPresetKey, setCurrentPresetKey] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const demo = params.get('demo');
+      if (demo && BOUTIQUE_PRESETS[demo]) return demo;
+    }
+    return 'mode';
+  });
+
+  const currentBoutique = BOUTIQUE_PRESETS[currentPresetKey] || BOUTIQUE_PRESETS.mode;
+
   // État du simulateur de commande One-Tap
-  const [selectedItems, setSelectedItems] = useState([PRODUCTS[0]]);
+  const [selectedItems, setSelectedItems] = useState([currentBoutique.products[0]]);
   const [selectedSize, setSelectedSize] = useState("M");
   const [customerName, setCustomerName] = useState("Amina");
   const [customerAddress, setCustomerAddress] = useState("Almadies, Dakar");
@@ -150,7 +234,7 @@ export default function App() {
   // Construction du message WhatsApp automatisé
   const generateWhatsAppMessage = () => {
     const itemsList = selectedItems.map(item => `• 1x ${item.name} (${selectedSize}) — ${item.price.toLocaleString('fr-FR')} FCFA`).join('\n');
-    return `Salam Maison Sahel ! 👋\nJe souhaite passer commande via votre catalogue Daro Boost :\n\n${itemsList}\n\n💰 *Total :* ${totalAmount.toLocaleString('fr-FR')} FCFA\n📍 *Livraison :* ${customerAddress}\n👤 *Nom :* ${customerName}\n\nPaiement souhaité : Wave 🌊`;
+    return `Salam ${currentBoutique.name} ! 👋\nJe souhaite passer commande via votre catalogue Daro Boost :\n\n${itemsList}\n\n💰 *Total :* ${totalAmount.toLocaleString('fr-FR')} FCFA\n📍 *Livraison :* ${customerAddress}\n👤 *Nom :* ${customerName}\n\nPaiement souhaité : Wave 🌊`;
   };
 
   return (
@@ -429,7 +513,31 @@ export default function App() {
             </div>
 
             {/* Colonne Téléphone Interactif (Prioritaire sur mobile) */}
-            <div className="lg:col-span-7 flex justify-center order-1 lg:order-2">
+            <div className="lg:col-span-7 flex flex-col items-center justify-center order-1 lg:order-2">
+              
+              {/* Sélecteur de Boutique pour Démonstration Réelle */}
+              <div className="flex items-center justify-center gap-1.5 p-1 bg-white border border-[#E4D5B7] rounded-full mb-4 shadow-sm">
+                {Object.entries(BOUTIQUE_PRESETS).map(([key, b]) => (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      setCurrentPresetKey(key);
+                      setSelectedItems([b.products[0]]);
+                      setSimScreen('catalogue');
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+                      currentPresetKey === key
+                        ? 'bg-[#C85A32] text-white shadow-sm scale-105'
+                        : 'text-[#6F5B4C] hover:bg-[#FAF7F0]'
+                    }`}
+                  >
+                    <span>{b.avatar}</span>
+                    <span className="hidden sm:inline">{b.name.split(' ')[0]}</span>
+                    <span className="sm:hidden">{key.toUpperCase()}</span>
+                  </button>
+                ))}
+              </div>
+
               <div className="w-full max-w-[340px] sm:max-w-[360px] bg-[#1E1610] p-2.5 sm:p-3 rounded-[2.5rem] sm:rounded-[3rem] phone-shadow">
                 {/* Notch / Caméra */}
                 <div className="w-24 h-4 bg-black mx-auto rounded-full mb-2"></div>
@@ -439,8 +547,11 @@ export default function App() {
                   
                   {/* Barre supérieure du téléphone */}
                   <div className="bg-[#FAF7F0] border-b border-[#EBE3D3] px-4 py-2.5 flex items-center justify-between text-xs font-mono text-[#5C4535]">
-                    <span className="font-bold">Maison Sahel • Bio Link</span>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5 truncate pr-2">
+                      <span>{currentBoutique.avatar}</span>
+                      <span className="font-bold truncate">{currentBoutique.name}</span>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                       <span className="text-[10px] text-emerald-700 font-bold">24h/24</span>
                     </div>
@@ -467,11 +578,12 @@ export default function App() {
                   {simScreen === 'catalogue' ? (
                     <div className="p-3 flex-1 flex flex-col justify-between overflow-y-auto">
                       <div className="space-y-2.5">
-                        <div className="text-[11px] text-[#6F5B4C] font-medium">
-                          Sélectionnez les articles à commander :
+                        <div className="text-[11px] text-[#6F5B4C] font-medium flex items-center justify-between">
+                          <span>Sélectionnez les articles :</span>
+                          <span className="text-[10px] font-mono text-[#C85A32] font-semibold">{currentBoutique.tagline.split('•')[0]}</span>
                         </div>
 
-                        {PRODUCTS.map(prod => {
+                        {currentBoutique.products.map(prod => {
                           const isSelected = selectedItems.some(i => i.id === prod.id);
                           return (
                             <div 
