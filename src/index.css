@@ -40,6 +40,21 @@
   animation: pulseSlow 3s infinite ease-in-out;
 }
 
+/* Masquer la scrollbar tout en gardant le scroll horizontal tactile */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Fluidité tactile mobile */
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
 /* Mockup phone shadow */
 .phone-shadow {
   box-shadow: 0 25px 60px -15px rgba(43, 30, 22, 0.25), 0 0 0 1px rgba(43, 30, 22, 0.08);

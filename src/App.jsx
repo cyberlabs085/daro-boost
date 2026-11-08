@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   ShoppingBag, 
   MessageCircle, 
@@ -108,6 +108,17 @@ export default function App() {
   // État interactif de zoom dynamique pour les cartes Télémétrie et Duel
   const [activeTelemetry, setActiveTelemetry] = useState(null);
   const [activeDuel, setActiveDuel] = useState('with'); // 'with' | 'without' | null
+  const [telemetryScrollIndex, setTelemetryScrollIndex] = useState(0);
+
+  const telemetryScrollRef = useRef(null);
+  const duelScrollRef = useRef(null);
+
+  const handleTelemetryScroll = (e) => {
+    const el = e.target;
+    const cardWidth = el.clientWidth * 0.78;
+    const index = Math.round(el.scrollLeft / (cardWidth || 1));
+    setTelemetryScrollIndex(Math.min(Math.max(index, 0), TELEMETRY_CARDS.length - 1));
+  };
 
   // Rotation dynamique des canaux (Instagram, TikTok, WhatsApp, Facebook)
   const [channelIndex, setChannelIndex] = useState(0);
@@ -146,35 +157,36 @@ export default function App() {
     <div className="min-h-screen bg-[#FDFBF7] text-[#2B1E16] font-sans bg-grain selection:bg-[#C85A32] selection:text-white">
       
       {/* 1. NAVBAR OFFICIELLE DARO TECH */}
-      <header className="sticky top-4 z-50 px-4 max-w-6xl mx-auto">
-        <nav className="bg-[#FAF7F0]/90 backdrop-blur-md border border-[#EBE3D3] rounded-full px-5 sm:px-8 py-3.5 flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#C85A32] text-white flex items-center justify-center font-bold text-sm tracking-wider">
+      <header className="sticky top-2 sm:top-4 z-50 px-2 sm:px-4 max-w-6xl mx-auto">
+        <nav className="bg-[#FAF7F0]/90 backdrop-blur-md border border-[#EBE3D3] rounded-full px-3.5 sm:px-8 py-2.5 sm:py-3.5 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#C85A32] text-white flex items-center justify-center font-bold text-xs sm:text-sm tracking-wider">
               DT
             </div>
             <div>
-              <span className="font-bold text-base tracking-tight text-[#2B1E16]">Daro TECH</span>
+              <span className="font-bold text-sm sm:text-base tracking-tight text-[#2B1E16]">Daro TECH</span>
               <span className="hidden sm:inline-block ml-2 text-xs uppercase tracking-wider font-mono px-2 py-0.5 rounded-full bg-[#EBE3D3]/60 text-[#8E381A]">
                 Unité Daro Boost
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-4">
             <a 
               href="#simulateur" 
-              className="text-xs sm:text-sm font-semibold text-[#8E381A] hover:text-[#C85A32] transition"
+              className="text-xs sm:text-sm font-semibold text-[#8E381A] hover:text-[#C85A32] transition px-1"
             >
-              Voir la Démo
+              Démo
             </a>
             <a 
               href="https://wa.me/221778690584?text=Salam%20Serigne%2C%20je%20souhaite%20activer%20Daro%20Boost%20pour%20ma%20boutique%20TikTok%20et%20Instagram" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="bg-[#2B1E16] hover:bg-[#C85A32] text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 py-2.5 rounded-full transition-all duration-300 shadow-sm flex items-center gap-2"
+              className="bg-[#2B1E16] hover:bg-[#C85A32] text-white text-xs sm:text-sm font-semibold px-3 sm:px-5 py-2 sm:py-2.5 rounded-full transition-all duration-300 shadow-sm flex items-center gap-1.5 sm:gap-2"
             >
               <Zap className="w-3.5 h-3.5 text-[#EBB458]" />
-              <span>Activer en 24h</span>
+              <span className="hidden sm:inline">Activer en 24h</span>
+              <span className="sm:hidden">15 000 F</span>
             </a>
           </div>
         </nav>
@@ -246,12 +258,13 @@ export default function App() {
           </a>
         </div>
 
-        {/* 4 Piliers Télémétrie avec Zoom Dynamique & Expansion Fluide */}
-        <div className="mt-16 text-left">
+        {/* 4 Piliers Télémétrie avec Défilement Tactile Fluide sur Mobile & Grille Desktop */}
+        <div className="mt-12 sm:mt-16 text-left">
           <div className="flex items-center justify-between mb-3 px-1">
             <span className="text-xs font-mono text-[#8E381A] font-semibold flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-[#C85A32] animate-ping"></span>
-              ✨ Touchez une carte pour zoomer et voir le détail :
+              <span className="hidden sm:inline">✨ Touchez une carte pour zoomer et voir le détail :</span>
+              <span className="sm:hidden">✨ Glissez ou touchez pour voir le détail :</span>
             </span>
             {activeTelemetry && (
               <button 
@@ -263,8 +276,13 @@ export default function App() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {TELEMETRY_CARDS.map((card) => {
+          {/* Carrousel tactile horizontal sur mobile / Grille sur écran large */}
+          <div 
+            ref={telemetryScrollRef}
+            onScroll={handleTelemetryScroll}
+            className="flex sm:grid sm:grid-cols-2 md:grid-cols-4 gap-3.5 overflow-x-auto sm:overflow-visible snap-x snap-mandatory pb-3 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar touch-pan-x"
+          >
+            {TELEMETRY_CARDS.map((card, idx) => {
               const IconComp = card.icon;
               const isActive = activeTelemetry === card.id;
 
@@ -272,9 +290,9 @@ export default function App() {
                 <div
                   key={card.id}
                   onClick={() => setActiveTelemetry(isActive ? null : card.id)}
-                  className={`p-5 rounded-2xl cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] border ${
+                  className={`w-[78vw] max-w-[280px] sm:w-auto shrink-0 snap-center p-5 rounded-2xl cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] border ${
                     isActive 
-                      ? `scale-[1.04] sm:scale-[1.06] -translate-y-2.5 bg-white shadow-2xl ring-2 ${card.ring} border-transparent z-20`
+                      ? `scale-[1.02] sm:scale-[1.06] -translate-y-1 sm:-translate-y-2.5 bg-white shadow-2xl ring-2 ${card.ring} border-transparent z-20`
                       : 'bg-[#FAF7F0] border-[#EBE3D3] hover:bg-white hover:-translate-y-1 hover:shadow-md'
                   }`}
                 >
@@ -310,34 +328,51 @@ export default function App() {
               );
             })}
           </div>
+
+          {/* Indicateur de swipe mobile avec points */}
+          <div className="flex sm:hidden items-center justify-between mt-3 px-1">
+            <span className="text-[11px] font-mono text-[#8E381A] flex items-center gap-1">
+              <span>👉 Glissez pour voir les 4 piliers</span>
+            </span>
+            <div className="flex items-center gap-1.5">
+              {TELEMETRY_CARDS.map((_, idx) => (
+                <span 
+                  key={idx} 
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    telemetryScrollIndex === idx ? 'w-5 bg-[#C85A32]' : 'w-1.5 bg-[#E4D5B7]'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
       {/* 3. LE SIMULATEUR INTERACTIF PHONE ONE-TAP (L'ARTEFACT MAÎTRE) */}
-      <section id="simulateur" className="py-20 px-4 bg-[#F5F0E4]/60 border-y border-[#E8DEC8]">
+      <section id="simulateur" className="py-12 sm:py-20 px-3 sm:px-6 bg-[#F5F0E4]/60 border-y border-[#E8DEC8]">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-14">
+          <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
             <span className="text-xs font-mono uppercase tracking-wider text-[#C85A32] font-bold">
               Expérience Interactive en Direct
             </span>
-            <h2 className="text-3xl sm:text-5xl font-extrabold text-[#2B1E16] tracking-tight mt-2 mb-4">
+            <h2 className="text-2xl sm:text-5xl font-extrabold text-[#2B1E16] tracking-tight mt-2 mb-3 sm:mb-4">
               Testez comme si vous étiez <span className="font-serif italic font-normal text-[#C85A32]">votre propre client.</span>
             </h2>
-            <p className="text-[#5C4535]">
-              Touchez les articles ci-dessous pour voir comment une commande sur vos vidéos TikTok ou posts Instagram se transforme instantanément en un message WhatsApp structuré et prêt à encaisser.
+            <p className="text-sm sm:text-base text-[#5C4535]">
+              Touchez les articles dans le téléphone ci-dessous pour voir comment une commande se transforme instantanément en un message WhatsApp structuré et prêt à encaisser.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center">
             
-            {/* Colonne Gauche : Explication & Contrôles */}
-            <div className="lg:col-span-5 space-y-6">
-              <div className="p-6 bg-[#FDFBF7] border border-[#E4D5B7] rounded-3xl shadow-sm">
-                <h3 className="font-bold text-lg text-[#2B1E16] mb-3 flex items-center gap-2">
+            {/* Colonne Explication & Contrôles (Placée après le téléphone sur mobile pour accès direct au jeu) */}
+            <div className="lg:col-span-5 space-y-4 sm:space-y-6 order-2 lg:order-1">
+              <div className="p-5 sm:p-6 bg-[#FDFBF7] border border-[#E4D5B7] rounded-3xl shadow-sm">
+                <h3 className="font-bold text-base sm:text-lg text-[#2B1E16] mb-2 sm:mb-3 flex items-center gap-2">
                   <Smartphone className="w-5 h-5 text-[#C85A32]" />
                   Ce qui se passe pour le client :
                 </h3>
-                <ul className="space-y-3 text-sm text-[#5C4535]">
+                <ul className="space-y-2.5 sm:space-y-3 text-xs sm:text-sm text-[#5C4535]">
                   <li className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-[#C85A32] shrink-0 mt-0.5" />
                     <span>Il clique sur votre lien en bio TikTok, Instagram ou WhatsApp (zéro application à installer).</span>
@@ -354,7 +389,7 @@ export default function App() {
               </div>
 
               {/* Panneau de configuration client démo */}
-              <div className="p-6 bg-[#FAF7F0] border border-[#E4D5B7] rounded-3xl space-y-4">
+              <div className="p-5 sm:p-6 bg-[#FAF7F0] border border-[#E4D5B7] rounded-3xl space-y-3.5 sm:space-y-4">
                 <div className="font-mono text-xs uppercase tracking-wider text-[#8E381A] font-bold">
                   Personnaliser le test en direct :
                 </div>
@@ -393,9 +428,9 @@ export default function App() {
               </div>
             </div>
 
-            {/* Colonne Droite : Le Mockup Téléphone Interactif */}
-            <div className="lg:col-span-7 flex justify-center">
-              <div className="w-full max-w-[360px] bg-[#1E1610] p-3 rounded-[3rem] phone-shadow">
+            {/* Colonne Téléphone Interactif (Prioritaire sur mobile) */}
+            <div className="lg:col-span-7 flex justify-center order-1 lg:order-2">
+              <div className="w-full max-w-[340px] sm:max-w-[360px] bg-[#1E1610] p-2.5 sm:p-3 rounded-[2.5rem] sm:rounded-[3rem] phone-shadow">
                 {/* Notch / Caméra */}
                 <div className="w-24 h-4 bg-black mx-auto rounded-full mb-2"></div>
                 
@@ -537,47 +572,70 @@ export default function App() {
       </section>
 
       {/* 4. LE DUEL : LE CHAOS DES DM VS LE STANDARD DARO BOOST */}
-      <section className="py-20 px-4 sm:px-6 max-w-5xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#2B1E16] tracking-tight mb-4">
+      <section className="py-12 sm:py-20 px-3 sm:px-6 max-w-5xl mx-auto">
+        <div className="text-center mb-10 sm:mb-16">
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-[#2B1E16] tracking-tight mb-3 sm:mb-4">
             Le Choc : Pourquoi 80% des ventes se perdent sur TikTok & Instagram
           </h2>
-          <p className="text-[#5C4535] max-w-xl mx-auto text-base">
+          <p className="text-sm sm:text-base text-[#5C4535] max-w-xl mx-auto">
             Ne soyez plus un commerçant qui passe sa journée à répondre « Prix en PV », devenez une marque qui traite des commandes automatiques.
           </p>
         </div>
 
         {/* Sélecteur de comparaison rapide */}
-        <div className="flex items-center justify-center gap-3 mb-8">
+        <div className="flex items-center justify-center gap-2 sm:gap-3 mb-6 sm:mb-8">
           <button
-            onClick={() => setActiveDuel('without')}
-            className={`px-4 py-2 rounded-full text-xs font-mono font-bold transition-all duration-300 flex items-center gap-2 ${
+            onClick={() => {
+              setActiveDuel('without');
+              if (duelScrollRef.current) {
+                duelScrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+              }
+            }}
+            className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-mono font-bold transition-all duration-300 flex items-center gap-1.5 sm:gap-2 ${
               activeDuel === 'without'
                 ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/20 scale-105'
                 : 'bg-white border border-[#E4D5B7] text-[#6F5B4C] hover:bg-rose-50'
             }`}
           >
-            <span>❌ Voir la Galère sans Daro</span>
+            <span>❌ La Galère sans Daro</span>
           </button>
           <button
-            onClick={() => setActiveDuel('with')}
-            className={`px-4 py-2 rounded-full text-xs font-mono font-bold transition-all duration-300 flex items-center gap-2 ${
+            onClick={() => {
+              setActiveDuel('with');
+              if (duelScrollRef.current) {
+                const el = duelScrollRef.current;
+                el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' });
+              }
+            }}
+            className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-mono font-bold transition-all duration-300 flex items-center gap-1.5 sm:gap-2 ${
               activeDuel === 'with'
                 ? 'bg-emerald-700 text-white shadow-lg shadow-emerald-700/20 scale-105'
                 : 'bg-white border border-[#E4D5B7] text-[#6F5B4C] hover:bg-emerald-50'
             }`}
           >
-            <span>✨ Voir l'effet Daro Boost (Recommandé)</span>
+            <span>✨ Avec Daro Boost (Recommandé)</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        {/* Conteneur avec scroll horizontal fluide snap sur mobile et grille 2 cols sur desktop */}
+        <div 
+          ref={duelScrollRef}
+          onScroll={(e) => {
+            const el = e.target;
+            if (el.scrollLeft > el.clientWidth * 0.4) {
+              setActiveDuel('with');
+            } else {
+              setActiveDuel('without');
+            }
+          }}
+          className="flex md:grid md:grid-cols-2 gap-4 md:gap-8 items-start overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-3 md:pb-0 -mx-3 px-3 md:mx-0 md:px-0 no-scrollbar touch-pan-x"
+        >
           {/* Colonne Rouge : Le Chaos Actuel */}
           <div 
             onClick={() => setActiveDuel(activeDuel === 'without' ? null : 'without')}
-            className={`p-8 rounded-3xl space-y-4 cursor-pointer transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] border ${
+            className={`w-[86vw] max-w-[420px] md:w-auto shrink-0 snap-center p-6 sm:p-8 rounded-3xl space-y-4 cursor-pointer transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] border ${
               activeDuel === 'without'
-                ? 'scale-[1.03] sm:scale-[1.05] -translate-y-2 bg-white border-rose-400 shadow-2xl ring-2 ring-rose-400 z-10'
+                ? 'scale-[1.02] sm:scale-[1.05] -translate-y-1 sm:-translate-y-2 bg-white border-rose-400 shadow-2xl ring-2 ring-rose-400 z-10'
                 : 'bg-[#FAF2F2] border-[#F3D5D5] hover:bg-white hover:border-rose-300 opacity-90'
             }`}
           >
@@ -589,11 +647,11 @@ export default function App() {
               <span className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold ${
                 activeDuel === 'without' ? 'bg-rose-600 text-white' : 'bg-rose-100 text-rose-800'
               }`}>
-                {activeDuel === 'without' ? '🔍 Zoom Actif' : 'Toucher pour zoomer'}
+                {activeDuel === 'without' ? '🔍 Zoom Actif' : 'Toucher'}
               </span>
             </div>
 
-            <ul className="space-y-3.5 text-sm text-[#5C4535]">
+            <ul className="space-y-3.5 text-xs sm:text-sm text-[#5C4535]">
               <li className="flex items-start gap-2">
                 <span className="text-rose-500 font-bold shrink-0">✕</span>
                 <span>Le client commente « Prix svp » sous votre vidéo TikTok ou en DM à 21h30.</span>
@@ -623,9 +681,9 @@ export default function App() {
           {/* Colonne Verte : Le Standard Daro Boost */}
           <div 
             onClick={() => setActiveDuel(activeDuel === 'with' ? null : 'with')}
-            className={`p-8 rounded-3xl space-y-4 cursor-pointer transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] border ${
+            className={`w-[86vw] max-w-[420px] md:w-auto shrink-0 snap-center p-6 sm:p-8 rounded-3xl space-y-4 cursor-pointer transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] border ${
               activeDuel === 'with'
-                ? 'scale-[1.03] sm:scale-[1.05] -translate-y-2 bg-white border-emerald-500 shadow-2xl ring-2 ring-emerald-500 z-10'
+                ? 'scale-[1.02] sm:scale-[1.05] -translate-y-1 sm:-translate-y-2 bg-white border-emerald-500 shadow-2xl ring-2 ring-emerald-500 z-10'
                 : 'bg-[#F2F8F4] border-[#CDE5D6] hover:bg-white hover:border-emerald-300 opacity-90'
             }`}
           >
@@ -637,11 +695,11 @@ export default function App() {
               <span className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold ${
                 activeDuel === 'with' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800'
               }`}>
-                {activeDuel === 'with' ? '✨ Zoom Actif' : 'Toucher pour zoomer'}
+                {activeDuel === 'with' ? '✨ Zoom Actif' : 'Toucher'}
               </span>
             </div>
 
-            <ul className="space-y-3.5 text-sm text-[#264D36]">
+            <ul className="space-y-3.5 text-xs sm:text-sm text-[#264D36]">
               <li className="flex items-start gap-2">
                 <span className="text-emerald-600 font-bold shrink-0">✓</span>
                 <span>Votre client clique sur votre lien en bio à n'importe quelle heure de la nuit.</span>
@@ -668,54 +726,65 @@ export default function App() {
             )}
           </div>
         </div>
+
+        {/* Indicateur de swipe mobile avec points */}
+        <div className="flex md:hidden items-center justify-between mt-3 px-1">
+          <span className="text-[11px] font-mono text-[#8E381A]">
+            👉 Glissez de gauche à droite pour comparer
+          </span>
+          <div className="flex items-center gap-1.5">
+            <span className={`h-1.5 rounded-full transition-all duration-300 ${activeDuel === 'without' ? 'w-5 bg-rose-600' : 'w-1.5 bg-[#E4D5B7]'}`} />
+            <span className={`h-1.5 rounded-full transition-all duration-300 ${activeDuel === 'with' ? 'w-5 bg-emerald-700' : 'w-1.5 bg-[#E4D5B7]'}`} />
+          </div>
+        </div>
       </section>
 
       {/* 5. TARIFICATION TRANSPARENTE DARO BOOST */}
-      <section className="py-20 px-4 bg-[#FAF7F0] border-t border-[#E8DEC8]">
+      <section className="py-12 sm:py-20 px-3 sm:px-6 bg-[#FAF7F0] border-t border-[#E8DEC8]">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-block bg-[#EFE7D3] border border-[#E4D5B7] px-4 py-1.5 rounded-full text-xs font-mono font-bold text-[#8E381A] mb-4">
             Offre Spéciale de Lancement Dakar
           </div>
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-[#2B1E16] mb-6">
+          <h2 className="text-2xl sm:text-5xl font-extrabold text-[#2B1E16] mb-4 sm:mb-6">
             Votre Pack Daro Boost clé en main
           </h2>
-          <p className="text-[#5C4535] max-w-xl mx-auto mb-12">
+          <p className="text-sm sm:text-base text-[#5C4535] max-w-xl mx-auto mb-8 sm:mb-12">
             Pas de devis complexe ni de mois d'attente. Nous déployons votre boutique en ligne en 24h chrono.
           </p>
 
-          <div className="bg-[#FDFBF7] border-2 border-[#C85A32] rounded-3xl p-8 sm:p-12 shadow-xl relative max-w-xl mx-auto text-left">
+          <div className="bg-[#FDFBF7] border-2 border-[#C85A32] rounded-3xl p-6 sm:p-12 shadow-xl relative max-w-xl mx-auto text-left">
             <div className="absolute -top-3.5 right-6 bg-[#C85A32] text-white text-[11px] font-mono font-bold px-3 py-1 rounded-full uppercase tracking-wider">
               Livré en 24h
             </div>
 
-            <div className="font-bold text-2xl text-[#2B1E16] mb-1">Pack Daro Boost Express</div>
-            <div className="text-sm text-[#6F5B4C] mb-6">Pour boutiques Instagram & créateurs à Dakar</div>
+            <div className="font-bold text-xl sm:text-2xl text-[#2B1E16] mb-1">Pack Daro Boost Express</div>
+            <div className="text-xs sm:text-sm text-[#6F5B4C] mb-6">Pour boutiques Instagram & créateurs à Dakar</div>
 
-            <div className="flex items-baseline gap-2 mb-8">
-              <span className="text-5xl font-extrabold font-mono text-[#2B1E16]">15 000</span>
-              <span className="text-lg font-bold text-[#C85A32]">FCFA</span>
-              <span className="text-xs text-[#6F5B4C] ml-2">(Frais de setup uniques)</span>
+            <div className="flex items-baseline gap-2 mb-6 sm:mb-8">
+              <span className="text-4xl sm:text-5xl font-extrabold font-mono text-[#2B1E16]">15 000</span>
+              <span className="text-base sm:text-lg font-bold text-[#C85A32]">FCFA</span>
+              <span className="text-xs text-[#6F5B4C] ml-1 sm:ml-2">(Frais de setup uniques)</span>
             </div>
 
-            <ul className="space-y-3.5 mb-8 text-sm text-[#5C4535]">
+            <ul className="space-y-3 sm:space-y-3.5 mb-8 text-xs sm:text-sm text-[#5C4535]">
               <li className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-[#C85A32] shrink-0" />
+                <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#C85A32] shrink-0" />
                 <span>Création de votre <strong>Landing Page One-Tap</strong> mobile ultra-rapide</span>
               </li>
               <li className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-[#C85A32] shrink-0" />
+                <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#C85A32] shrink-0" />
                 <span>Intégration de <strong>5 à 15 produits phares</strong> avec photos et prix en FCFA</span>
               </li>
               <li className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-[#C85A32] shrink-0" />
+                <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#C85A32] shrink-0" />
                 <span>Bouton <strong>Commande WhatsApp Automatisée</strong> pré-remplie</span>
               </li>
               <li className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-[#C85A32] shrink-0" />
+                <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#C85A32] shrink-0" />
                 <span>Lien optimisé pour votre <strong>bio Instagram & TikTok</strong></span>
               </li>
               <li className="flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5 text-[#C85A32] shrink-0" />
+                <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#C85A32] shrink-0" />
                 <span>Maintenance & hébergement rapide : seulement <strong>2 000 FCFA/mois</strong></span>
               </li>
             </ul>
@@ -724,7 +793,7 @@ export default function App() {
               href="https://wa.me/221778690584?text=Salam%20Serigne%2C%20je%20veux%20lancer%20mon%20Daro%20Boost%20à%2015000%20FCFA%20pour%20ma%20boutique" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="w-full bg-[#2B1E16] hover:bg-[#C85A32] text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3 text-base transition shadow-md group"
+              className="w-full bg-[#2B1E16] hover:bg-[#C85A32] text-white font-bold py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-3 text-sm sm:text-base transition shadow-md group"
             >
               <span>Activer mon Daro Boost en 24h</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" />
@@ -737,8 +806,8 @@ export default function App() {
       </section>
 
       {/* 6. FAQ INTERACTIVE */}
-      <section className="py-20 px-4 sm:px-6 max-w-3xl mx-auto">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-[#2B1E16] text-center mb-10">
+      <section className="py-12 sm:py-20 px-3 sm:px-6 max-w-3xl mx-auto">
+        <h2 className="text-xl sm:text-3xl font-extrabold text-[#2B1E16] text-center mb-8 sm:mb-10">
           Questions Fréquentes des Commerçants
         </h2>
 
