@@ -26,6 +26,49 @@ const CHANNELS = [
   { label: "Directs Facebook.", color: "text-[#1877F2]", platform: "Facebook", bg: "bg-[#1877F2]/10", border: "border-[#1877F2]/30" }
 ];
 
+const TELEMETRY_CARDS = [
+  {
+    id: 1,
+    title: "24h chrono",
+    subtitle: "Votre catalogue en ligne demain",
+    detail: "⚡ Déploiement express par Pape : nous prenons vos 5 à 15 photos aujourd'hui, votre boutique vend dès demain matin.",
+    icon: Clock,
+    color: "text-[#C85A32]",
+    ring: "ring-[#C85A32]",
+    badge: "Garantie 24h"
+  },
+  {
+    id: 2,
+    title: "3 clics",
+    subtitle: "Du post TikTok au paiement Wave",
+    detail: "📲 Votre client clique sur le lien en bio, choisit sa taille, et vous recevez la commande déjà calculée sur WhatsApp.",
+    icon: Zap,
+    color: "text-[#E09F3E]",
+    ring: "ring-[#E09F3E]",
+    badge: "Zéro Friction"
+  },
+  {
+    id: 3,
+    title: "+40% Ventes",
+    subtitle: "Zéro client perdu par lenteur",
+    detail: "📈 Les acheteurs impulsifs de 22h commandent immédiatement sans attendre 4h que vous répondiez en DM.",
+    icon: TrendingUp,
+    color: "text-[#C85A32]",
+    ring: "ring-[#C85A32]",
+    badge: "Disponibilité 24h/24"
+  },
+  {
+    id: 4,
+    title: "15 000 F",
+    subtitle: "Setup unique sans abonnement lourd",
+    detail: "💰 Zéro commission sur vos commandes : 100% du chiffre d'affaires encaissé par Wave ou Orange Money reste pour vous.",
+    icon: Award,
+    color: "text-[#2B1E16]",
+    ring: "ring-[#2B1E16]",
+    badge: "Rentable dès le 1er jour"
+  }
+];
+
 const PRODUCTS = [
   {
     id: 1,
@@ -61,6 +104,10 @@ export default function App() {
   const [customerAddress, setCustomerAddress] = useState("Almadies, Dakar");
   const [simScreen, setSimScreen] = useState('catalogue'); // 'catalogue' | 'whatsapp'
   const [openFaq, setOpenFaq] = useState(null);
+
+  // État interactif de zoom dynamique pour les cartes Télémétrie et Duel
+  const [activeTelemetry, setActiveTelemetry] = useState(null);
+  const [activeDuel, setActiveDuel] = useState('with'); // 'with' | 'without' | null
 
   // Rotation dynamique des canaux (Instagram, TikTok, WhatsApp, Facebook)
   const [channelIndex, setChannelIndex] = useState(0);
@@ -199,27 +246,69 @@ export default function App() {
           </a>
         </div>
 
-        {/* 4 Piliers Télémétrie */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16 text-left">
-          <div className="p-4 bg-[#FAF7F0] border border-[#EBE3D3] rounded-2xl">
-            <Clock className="w-5 h-5 text-[#C85A32] mb-2" />
-            <div className="font-mono text-xl font-bold text-[#2B1E16]">24h chrono</div>
-            <div className="text-xs text-[#6F5B4C]">Votre catalogue en ligne demain</div>
+        {/* 4 Piliers Télémétrie avec Zoom Dynamique & Expansion Fluide */}
+        <div className="mt-16 text-left">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <span className="text-xs font-mono text-[#8E381A] font-semibold flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#C85A32] animate-ping"></span>
+              ✨ Touchez une carte pour zoomer et voir le détail :
+            </span>
+            {activeTelemetry && (
+              <button 
+                onClick={() => setActiveTelemetry(null)}
+                className="text-[11px] font-mono text-[#6F5B4C] hover:text-[#C85A32] underline"
+              >
+                Réduire ✕
+              </button>
+            )}
           </div>
-          <div className="p-4 bg-[#FAF7F0] border border-[#EBE3D3] rounded-2xl">
-            <Zap className="w-5 h-5 text-[#E09F3E] mb-2" />
-            <div className="font-mono text-xl font-bold text-[#2B1E16]">3 clics</div>
-            <div className="text-xs text-[#6F5B4C]">Du post Instagram au paiement Wave</div>
-          </div>
-          <div className="p-4 bg-[#FAF7F0] border border-[#EBE3D3] rounded-2xl">
-            <TrendingUp className="w-5 h-5 text-[#C85A32] mb-2" />
-            <div className="font-mono text-xl font-bold text-[#2B1E16]">+40% Ventes</div>
-            <div className="text-xs text-[#6F5B4C]">Zéro client perdu par lenteur</div>
-          </div>
-          <div className="p-4 bg-[#FAF7F0] border border-[#EBE3D3] rounded-2xl">
-            <Award className="w-5 h-5 text-[#2B1E16] mb-2" />
-            <div className="font-mono text-xl font-bold text-[#2B1E16]">15 000 F</div>
-            <div className="text-xs text-[#6F5B4C]">Setup unique sans abonnement lourd</div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            {TELEMETRY_CARDS.map((card) => {
+              const IconComp = card.icon;
+              const isActive = activeTelemetry === card.id;
+
+              return (
+                <div
+                  key={card.id}
+                  onClick={() => setActiveTelemetry(isActive ? null : card.id)}
+                  className={`p-5 rounded-2xl cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] border ${
+                    isActive 
+                      ? `scale-[1.04] sm:scale-[1.06] -translate-y-2.5 bg-white shadow-2xl ring-2 ${card.ring} border-transparent z-20`
+                      : 'bg-[#FAF7F0] border-[#EBE3D3] hover:bg-white hover:-translate-y-1 hover:shadow-md'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2.5">
+                    <div className={`p-2 rounded-xl ${isActive ? 'bg-[#F5F0E4]' : 'bg-white/80'}`}>
+                      <IconComp className={`w-5 h-5 ${card.color} transition-transform duration-300 ${isActive ? 'scale-125' : ''}`} />
+                    </div>
+                    {isActive ? (
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#C85A32] text-white animate-pulse">
+                        {card.badge}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-mono text-[#9B8270] tracking-wider">
+                        + détails
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="font-mono text-xl font-bold text-[#2B1E16] tracking-tight">
+                    {card.title}
+                  </div>
+                  <div className="text-xs text-[#6F5B4C] mt-0.5 leading-snug font-medium">
+                    {card.subtitle}
+                  </div>
+
+                  {/* Expansion fluide animée au clic */}
+                  {isActive && (
+                    <div className="mt-3.5 pt-3 border-t border-[#EBE3D3] text-xs text-[#5C4535] leading-relaxed animate-fadeIn">
+                      {card.detail}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -458,57 +547,125 @@ export default function App() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Sélecteur de comparaison rapide */}
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <button
+            onClick={() => setActiveDuel('without')}
+            className={`px-4 py-2 rounded-full text-xs font-mono font-bold transition-all duration-300 flex items-center gap-2 ${
+              activeDuel === 'without'
+                ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/20 scale-105'
+                : 'bg-white border border-[#E4D5B7] text-[#6F5B4C] hover:bg-rose-50'
+            }`}
+          >
+            <span>❌ Voir la Galère sans Daro</span>
+          </button>
+          <button
+            onClick={() => setActiveDuel('with')}
+            className={`px-4 py-2 rounded-full text-xs font-mono font-bold transition-all duration-300 flex items-center gap-2 ${
+              activeDuel === 'with'
+                ? 'bg-emerald-700 text-white shadow-lg shadow-emerald-700/20 scale-105'
+                : 'bg-white border border-[#E4D5B7] text-[#6F5B4C] hover:bg-emerald-50'
+            }`}
+          >
+            <span>✨ Voir l'effet Daro Boost (Recommandé)</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
           {/* Colonne Rouge : Le Chaos Actuel */}
-          <div className="p-8 bg-[#FAF2F2] border border-[#F3D5D5] rounded-3xl space-y-4">
-            <div className="flex items-center gap-2 text-rose-700 font-bold font-mono text-sm uppercase">
-              <AlertTriangle className="w-5 h-5 text-rose-600" />
-              <span>Sans Daro Boost (La Galère)</span>
+          <div 
+            onClick={() => setActiveDuel(activeDuel === 'without' ? null : 'without')}
+            className={`p-8 rounded-3xl space-y-4 cursor-pointer transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] border ${
+              activeDuel === 'without'
+                ? 'scale-[1.03] sm:scale-[1.05] -translate-y-2 bg-white border-rose-400 shadow-2xl ring-2 ring-rose-400 z-10'
+                : 'bg-[#FAF2F2] border-[#F3D5D5] hover:bg-white hover:border-rose-300 opacity-90'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-rose-700 font-bold font-mono text-sm uppercase">
+                <AlertTriangle className="w-5 h-5 text-rose-600" />
+                <span>Sans Daro Boost (La Galère)</span>
+              </div>
+              <span className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold ${
+                activeDuel === 'without' ? 'bg-rose-600 text-white' : 'bg-rose-100 text-rose-800'
+              }`}>
+                {activeDuel === 'without' ? '🔍 Zoom Actif' : 'Toucher pour zoomer'}
+              </span>
             </div>
+
             <ul className="space-y-3.5 text-sm text-[#5C4535]">
               <li className="flex items-start gap-2">
-                <span className="text-rose-500 font-bold">✕</span>
+                <span className="text-rose-500 font-bold shrink-0">✕</span>
                 <span>Le client commente « Prix svp » sous votre vidéo TikTok ou en DM à 21h30.</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-rose-500 font-bold">✕</span>
+                <span className="text-rose-500 font-bold shrink-0">✕</span>
                 <span>Vous répondez le lendemain matin après 4h de retard : le client est déjà parti acheter ailleurs.</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-rose-500 font-bold">✕</span>
+                <span className="text-rose-500 font-bold shrink-0">✕</span>
                 <span>Échanges interminables sur WhatsApp : « Tu as quelle taille ? C'est où chez toi ? ».</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-rose-500 font-bold">✕</span>
+                <span className="text-rose-500 font-bold shrink-0">✕</span>
                 <span>Erreurs de calculs, commandes oubliées dans les discussions WhatsApp.</span>
               </li>
             </ul>
+
+            {/* Expansion d'impact au clic */}
+            {activeDuel === 'without' && (
+              <div className="mt-4 pt-4 border-t border-rose-200 bg-rose-50/70 p-3.5 rounded-2xl text-xs text-rose-900 leading-relaxed animate-fadeIn">
+                <strong>📉 L'impact réel sur votre poche :</strong> Vous perdez environ 3 ventes sur 5 chaque semaine simplement parce que l'acheteur n'a pas eu de réponse instantanée le soir.
+              </div>
+            )}
           </div>
 
           {/* Colonne Verte : Le Standard Daro Boost */}
-          <div className="p-8 bg-[#F2F8F4] border border-[#CDE5D6] rounded-3xl space-y-4">
-            <div className="flex items-center gap-2 text-emerald-800 font-bold font-mono text-sm uppercase">
-              <ShieldCheck className="w-5 h-5 text-emerald-600" />
-              <span>Avec Daro Boost (Le Vendeur 24h/24)</span>
+          <div 
+            onClick={() => setActiveDuel(activeDuel === 'with' ? null : 'with')}
+            className={`p-8 rounded-3xl space-y-4 cursor-pointer transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] border ${
+              activeDuel === 'with'
+                ? 'scale-[1.03] sm:scale-[1.05] -translate-y-2 bg-white border-emerald-500 shadow-2xl ring-2 ring-emerald-500 z-10'
+                : 'bg-[#F2F8F4] border-[#CDE5D6] hover:bg-white hover:border-emerald-300 opacity-90'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-emerald-800 font-bold font-mono text-sm uppercase">
+                <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                <span>Avec Daro Boost (Le Vendeur 24h/24)</span>
+              </div>
+              <span className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold ${
+                activeDuel === 'with' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800'
+              }`}>
+                {activeDuel === 'with' ? '✨ Zoom Actif' : 'Toucher pour zoomer'}
+              </span>
             </div>
+
             <ul className="space-y-3.5 text-sm text-[#264D36]">
               <li className="flex items-start gap-2">
-                <span className="text-emerald-600 font-bold">✓</span>
+                <span className="text-emerald-600 font-bold shrink-0">✓</span>
                 <span>Votre client clique sur votre lien en bio à n'importe quelle heure de la nuit.</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-emerald-600 font-bold">✓</span>
+                <span className="text-emerald-600 font-bold shrink-0">✓</span>
                 <span>Catalogue One-Tap ultra-rapide affichant vos prix et pièces phares en FCFA.</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-emerald-600 font-bold">✓</span>
+                <span className="text-emerald-600 font-bold shrink-0">✓</span>
                 <span>Vous recevez la commande déjà calculée et le quartier sur WhatsApp en 1 seconde.</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-emerald-600 font-bold">✓</span>
+                <span className="text-emerald-600 font-bold shrink-0">✓</span>
                 <span>Vous n'avez plus qu'à envoyer votre lien Wave et expédier le colis !</span>
               </li>
             </ul>
+
+            {/* Expansion d'impact au clic */}
+            {activeDuel === 'with' && (
+              <div className="mt-4 pt-4 border-t border-emerald-200 bg-emerald-50/70 p-3.5 rounded-2xl text-xs text-emerald-950 leading-relaxed animate-fadeIn">
+                <strong>🚀 L'avantage décisif :</strong> Vous vous réveillez le matin avec des commandes déjà formalisées et le montant total calculé. Vous ne faites que valider et encaisser !
+              </div>
+            )}
           </div>
         </div>
       </section>
